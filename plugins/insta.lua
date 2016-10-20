@@ -1,10 +1,3 @@
---[[
-#
-#     @GPMOD 
-#  @Dragon_Born
-#      
-]] 
-
 local access_token = "3084249803.280d5d7.999310365c8248f8948ee0f6929c2f02" -- your api key
 local function instagramUser(msg, query)
     local receiver = get_receiver(msg)
@@ -95,11 +88,11 @@ end
 end
 return {
    patterns = {
-   "^[/!]([Ii]nsta) ([Hh]ttps://www.instagram.com/p/)([^%s]+)$",
-   "^[/!]([Ii]nsta) ([Hh]ttps://instagram.com/p/)([^%s]+)$",
-   "^[/!]([Ii]nsta) ([Hh]ttp://www.instagram.com/p/)([^%s]+)$",
-   "^[/!]([Ii]nsta) ([Hh]ttp://instagram.com/p/)([^%s]+)$",
-   "^[/!]([Ii]nsta) ([^%s]+)$",
+   "^[#/!]([Ii]nsta) ([Hh]ttps://www.instagram.com/p/)([^%s]+)$",
+   "^[#/!]([Ii]nsta) ([Hh]ttps://instagram.com/p/)([^%s]+)$",
+   "^[#/!]([Ii]nsta) ([Hh]ttp://www.instagram.com/p/)([^%s]+)$",
+   "^[#/!]([Ii]nsta) ([Hh]ttp://instagram.com/p/)([^%s]+)$",
+   "^[#/!]([Ii]nsta) ([^%s]+)$",
    "^([Ii]nsta) ([Hh]ttps://www.instagram.com/p/)([^%s]+)$",
    "^([Ii]nsta) ([Hh]ttps://instagram.com/p/)([^%s]+)$",
    "^([Ii]nsta) ([Hh]ttp://www.instagram.com/p/)([^%s]+)$",

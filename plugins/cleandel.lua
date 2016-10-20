@@ -1,10 +1,221 @@
 -- kick sentences
 local phrases = {
-    "R.I.P.",
-	 "koskesh",
+    "Kicked!",
+	"Ekhraj Shod",
+	"Sik Shod!",
+	"Az Gorouh Sik Shod",
 }
 
-local function kick_deleted_chat(extra, success, result)
+local function kick_by_username(cb_extra, success, result)
+    if success == 0 then
+        return send_large_msg(cb_extra.receiver, lang_text('noUsernameFound'))
+    end
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.peer_id, cb_extra.chat_id) then
+        local function post_kick()
+            kick_user_any(result.peer_id, cb_extra.chat_id)
+        end
+        postpone(post_kick, false, 3)
+        send_large_msg(cb_extra.receiver, phrases[math.random(#phrases)])
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] kicked user " .. result.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] kicked user " .. result.peer_id .. " N")
+    end
+end
+
+local function kick_by_reply(cb_extra, success, result)
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.from.peer_id, result.to.peer_id) then
+        local function post_kick()
+            kick_user_any(result.from.peer_id, result.to.peer_id)
+        end
+        postpone(post_kick, false, 3)
+        send_large_msg(cb_extra.receiver, phrases[math.random(#phrases)])
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] kicked user " .. result.from.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] kicked user " .. result.from.peer_id .. " N")
+    end
+end
+
+local function ban_by_username(cb_extra, success, result)
+    if success == 0 then
+        return send_large_msg(cb_extra.receiver, lang_text('noUsernameFound'))
+    end
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.peer_id, cb_extra.chat_id) then
+        local function post_kick()
+            ban_user(result.peer_id, cb_extra.chat_id)
+        end
+        postpone(post_kick, false, 3)
+        send_large_msg(cb_extra.receiver, lang_text('user') .. result.peer_id .. lang_text('banned') .. '\n' .. phrases[math.random(#phrases)])
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] banned user " .. result.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] banned user " .. result.peer_id .. " N")
+    end
+end
+
+local function ban_by_reply(cb_extra, success, result)
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.from.peer_id, result.to.peer_id) then
+        local function post_kick()
+            ban_user(result.from.peer_id, result.to.peer_id)
+        end
+        postpone(post_kick, false, 3)
+        send_large_msg(cb_extra.receiver, lang_text('user') .. result.from.peer_id .. lang_text('banned') .. '\n' .. phrases[math.random(#phrases)])
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] banned user " .. result.from.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] banned user " .. result.from.peer_id .. " N")
+    end
+end
+
+local function unban_by_username(cb_extra, success, result)
+    if success == 0 then
+        return send_large_msg(cb_extra.receiver, lang_text('noUsernameFound'))
+    end
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.peer_id, cb_extra.chat_id) then
+        local hash = 'banned:' .. cb_extra.chat_id
+        redis:srem(hash, result.peer_id)
+        send_large_msg(cb_extra.receiver, lang_text('user') .. result.peer_id .. lang_text('unbanned'))
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] unbanned user " .. result.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] unbanned user " .. result.peer_id .. " N")
+    end
+end
+
+local function unban_by_reply(cb_extra, success, result)
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.from.peer_id, result.to.peer_id) then
+        local hash = 'banned:' .. result.to.peer_id
+        redis:srem(hash, result.from.peer_id)
+        send_large_msg(cb_extra.receiver, lang_text('user') .. result.from.peer_id .. lang_text('unbanned'))
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] unbanned user " .. result.from.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] unbanned user " .. result.from.peer_id .. " N")
+    end
+end
+
+local function banall_by_username(cb_extra, success, result)
+    if success == 0 then
+        return send_large_msg(cb_extra.receiver, lang_text('noUsernameFound'))
+    end
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.peer_id, cb_extra.chat_id) then
+        banall_user(result.peer_id)
+        send_large_msg(cb_extra.receiver, lang_text('user') .. result.peer_id .. lang_text('gbanned'))
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] globally banned user " .. result.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] globally banned user " .. result.peer_id .. " N")
+    end
+end
+
+local function banall_by_reply(cb_extra, success, result)
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.from.peer_id, result.to.peer_id) then
+        local function post_kick()
+            banall_user(result.from.peer_id)
+        end
+        postpone(post_kick, false, 3)
+        send_large_msg(cb_extra.receiver, lang_text('user') .. result.peer_id .. lang_text('gbanned'))
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] globally banned user " .. result.from.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] globally banned user " .. result.from.peer_id .. " N")
+    end
+end
+
+
+local function unbanall_by_username(cb_extra, success, result)
+    if success == 0 then
+        return send_large_msg(cb_extra.receiver, lang_text('noUsernameFound'))
+    end
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.peer_id, cb_extra.chat_id) then
+        unbanall_user(result.peer_id)
+        send_large_msg(cb_extra.receiver, lang_text('user') .. result.peer_id .. lang_text('ungbanned'))
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] globally unbanned user " .. result.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(cb_extra.chat_id, "[" .. cb_extra.executer .. "] globally unbanned user " .. result.peer_id .. " N")
+    end
+end
+
+local function unbanall_by_reply(cb_extra, success, result)
+    -- ignore higher or same rank
+    if compare_ranks(cb_extra.executer, result.from.peer_id, result.to.peer_id) then
+        unbanall_user(result.from.peer_id)
+        send_large_msg(cb_extra.receiver, lang_text('user') .. result.from.peer_id .. lang_text('ungbanned'))
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] globally unbanned user " .. result.from.peer_id .. " Y")
+    else
+        send_large_msg(cb_extra.receiver, lang_text('require_rank'))
+        savelog(result.to.peer_id, "[" .. cb_extra.executer .. "] globally unbanned user " .. result.from.peer_id .. " N")
+    end
+end
+
+local function kickrandom_chat(cb_extra, success, result)
+    local chat_id = cb_extra.chat_id
+    local kickable = false
+    local id
+    while not kickable do
+        id = result.members[math.random(#result.members)].id
+        print(id)
+        if not(tonumber(id) == tonumber(our_id) or is_momod2(id, chat_id) or is_whitelisted(id)) then
+            kickable = true
+            send_large_msg('chat#id' .. chat_id, 'â„¹ï¸ ' .. id .. ' ' .. lang_text('kicked'))
+            local function post_kick()
+                kick_user_any(id, chat_id)
+            end
+            postpone(post_kick, false, 1)
+        else
+            print('403')
+        end
+    end
+end
+
+local function kickrandom_channel(cb_extra, success, result)
+    local chat_id = msg.to.id
+    local kickable = false
+    local id
+    while not kickable do
+        id = result[math.random(#result)].id
+        print(id)
+        if not(tonumber(id) == tonumber(our_id) or is_momod2(id, chat_id) or is_whitelisted(id)) then
+            kickable = true
+            send_large_msg('channel#id' .. result.id, 'Kicked!')
+            local function post_kick()
+                kick_user_any(id, result.id)
+            end
+            postpone(post_kick, false, 1)
+        else
+            print('403')
+        end
+    end
+end
+
+local function kick_nouser_chat(cb_extra, success, result)
+    for k, v in pairs(result.members) do
+        if not v.username then
+            kick_user(v.id, result.id)
+        end
+    end
+end
+
+local function kick_nouser_channel(cb_extra, success, result)
+    for k, v in pairs(result) do
+        if not v.username then
+            kick_user(v.peer_id, cb_extra.chat_id)
+        end
+    end
+end
+
+local function kick_deleted_chat(cb_extra, success, result)
     for k, v in pairs(result.members) do
         if not v.print_name then
             kick_user(v.id, result.id)
@@ -12,10 +223,10 @@ local function kick_deleted_chat(extra, success, result)
     end
 end
 
-local function kick_deleted_channel(extra, success, result)
+local function kick_deleted_channel(cb_extra, success, result)
     for k, v in pairs(result) do
         if not v.print_name then
-            kick_user(v.id, extra.chat_id)
+            kick_user(v.id, cb_extra.chat_id)
         end
     end
 end
@@ -29,10 +240,10 @@ local function user_msgs(user_id, chat_id)
     return user_info
 end
 
-local function kick_inactive_chat(extra, success, result)
-    local chat_id = extra.chat_id
-    local num = extra.num
-    local receiver = extra.receiver
+local function kick_inactive_chat(cb_extra, success, result)
+    local chat_id = cb_extra.chat_id
+    local num = cb_extra.num
+    local receiver = cb_extra.receiver
     local kicked = 0
 
     for k, v in pairs(result.members) do
@@ -50,10 +261,10 @@ local function kick_inactive_chat(extra, success, result)
     send_large_msg(receiver, lang_text('massacre'):gsub('X', kicked))
 end
 
-local function kick_inactive_channel(extra, success, result)
-    local chat_id = extra.chat_id
-    local num = extra.num
-    local receiver = extra.receiver
+local function kick_inactive_channel(cb_extra, success, result)
+    local chat_id = cb_extra.chat_id
+    local num = cb_extra.num
+    local receiver = cb_extra.receiver
     local kicked = 0
 
     for k, v in pairs(result) do
@@ -79,7 +290,7 @@ local function run(msg, matches)
     if matches[1]:lower() == 'kickme' or matches[1]:lower() == 'sasha uccidimi' then
         -- /kickme
         if msg.to.type == 'chat' or msg.to.type == 'channel' then
-            local print_name = user_print_name(msg.from):gsub("‮", "")
+            local print_name = user_print_name(msg.from):gsub("â€®", "")
             local name = print_name:gsub("_", "")
             savelog(msg.to.id, name .. " [" .. msg.from.id .. "] left using kickme ")
             -- Save to logs
@@ -93,7 +304,7 @@ local function run(msg, matches)
         end
     end
     if is_momod(msg) then
-        if matches[1]:lower() == 'kick' or matches[1]:lower() == 'sasha uccidi' or matches[1]:lower() == 'uccidi' or matches[1]:lower() == 'spara' then
+        if matches[1]:lower() == 'kick' or matches[1]:lower() == 'sik' or matches[1]:lower() == 'sasha uccidi' or matches[1]:lower() == 'uccidi' or matches[1]:lower() == 'spara' then
             if msg.to.type == 'chat' or msg.to.type == 'channel' then
                 -- /kick
                 if type(msg.reply_id) ~= "nil" then
@@ -213,7 +424,7 @@ local function run(msg, matches)
                 end
             end
         end
-        if matches[1]:lower() == 'clear deleted' or matches[1]:lower() == 'sasha uccidi eliminati' or matches[1]:lower() == 'spara eliminati' then
+        if matches[1]:lower() == 'clean deleted' or matches[1]:lower() == 'sasha uccidi eliminati' or matches[1]:lower() == 'spara eliminati' then
             -- /kickdeleted
             if msg.to.type == 'chat' then
                 chat_info(receiver, kick_deleted_chat, { receiver = get_receiver(msg) })
@@ -336,7 +547,7 @@ local function pre_process(msg)
             if is_banned(user_id, msg.to.id) or is_gbanned(user_id) then
                 -- Check it with redis
                 print('User is banned!')
-                local print_name = user_print_name(msg.from):gsub("‮", "")
+                local print_name = user_print_name(msg.from):gsub("â€®", "")
                 local name = print_name:gsub("_", "")
                 savelog(msg.to.id, name .. " [" .. msg.from.id .. "] is banned and kicked ! ")
                 -- Save to logs
@@ -350,7 +561,7 @@ local function pre_process(msg)
             if is_banned(user_id, msg.to.id) and not is_momod2(msg.from.id, msg.to.id) or is_gbanned(user_id) and not is_admin2(msg.from.id) then
                 -- Check it with redis
                 print('User is banned!')
-                local print_name = user_print_name(msg.from):gsub("‮", "")
+                local print_name = user_print_name(msg.from):gsub("â€®", "")
                 local name = print_name:gsub("_", "")
                 savelog(msg.to.id, name .. " [" .. msg.from.id .. "] added a banned user >" .. msg.action.user.id)
                 -- Save to logs
@@ -383,7 +594,7 @@ local function pre_process(msg)
             if msg.action.user.username ~= nil then
                 if string.sub(msg.action.user.username:lower(), -3) == 'bot' and not is_momod(msg) and bots_protection == "yes" then
                     --- Will kick bots added by normal users
-                    local print_name = user_print_name(msg.from):gsub("‮", "")
+                    local print_name = user_print_name(msg.from):gsub("â€®", "")
                     local name = print_name:gsub("_", "")
                     savelog(msg.to.id, name .. " [" .. msg.from.id .. "] added a bot > @" .. msg.action.user.username)
                     -- Save to logs
@@ -407,7 +618,7 @@ local function pre_process(msg)
         if is_banned(user_id, msg.to.id) or is_gbanned(user_id) then
             -- Check it with redis
             print('Banned user talking!')
-            local print_name = user_print_name(msg.from):gsub("‮", "")
+            local print_name = user_print_name(msg.from):gsub("â€®", "")
             local name = print_name:gsub("_", "")
             savelog(msg.to.id, name .. " [" .. msg.from.id .. "] banned user is talking !")
             -- Save to logs
@@ -422,12 +633,26 @@ return {
     description = "BANHAMMER",
     patterns =
     {
+        "^[#!/]([Kk][Ii][Cc][Kk]) (.*)$",
+        "^[#!/]([Kk][Ii][Cc][Kk])$",
+		 "^[#!/]([Ss][Ii][Kk]) (.*)$",
+        "^[#!/]([Ss][Ii][Kk])$",
+        --"^[#!/]([Kk][Ii][Cc][Kk][Rr][Aa][Nn][Dd][Oo][Mm])$",
+        "^[#!/]([Kk][Ii][Cc][Kk][Nn][Oo][Tt][Uu][Ss][Ee][Rr][Nn][Aa][Mm][Ee])$",
         "^[#!/]([Kk][Ii][Cc][Kk][Ii][Nn][Aa][Cc][Tt][Ii][Vv][Ee])$",
         "^[#!/]([Kk][Ii][Cc][Kk][Ii][Nn][Aa][Cc][Tt][Ii][Vv][Ee]) (%d+)$",
-        "^[#!/]([Cc][Ll][Ee][Aa][Rr] [Dd][Ee][Ll][Ee][Tt][Ee][Dd])$",
+		 "^([Kk][Ii][Cc][Kk]) (.*)$",
+        "^([Kk][Ii][Cc][Kk])$",
+		 "^([Ss][Ii][Kk]) (.*)$",
+        "^([Ss][Ii][Kk])$",
+		 -- "^([Bb][Aa][Nn]) (.*)$",
+      --  "^([Bb][Aa][Nn])$",
+		--"^([Uu][Nn][Bb][Aa][Nn]) (.*)$",
+        --"^([Uu][Nn][Bb][Aa][Nn])$",
+        --"^([Kk][Ii][Cc][Kk][Rr][Aa][Nn][Dd][Oo][Mm])$",
+        "^([Kk][Ii][Cc][Kk][Nn][Oo][Tt][Uu][Ss][Ee][Rr][Nn][Aa][Mm][Ee])$",
         "^([Kk][Ii][Cc][Kk][Ii][Nn][Aa][Cc][Tt][Ii][Vv][Ee])$",
         "^([Kk][Ii][Cc][Kk][Ii][Nn][Aa][Cc][Tt][Ii][Vv][Ee]) (%d+)$",
-        "^([Cc][Ll][Ee][Aa][Rr] [Dd][Ee][Ll][Ee][Tt][Ee][Dd])$",
         "^!!tgservice (.+)$"
 
     },
